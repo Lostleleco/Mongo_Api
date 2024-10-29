@@ -6,9 +6,31 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 require('dotenv').config();
 
+const aws = require('aws-sdk');
+const multerS3 = require('multer-s3');
+
+// Configurar o S3
+aws.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION
+});
+
+const s3 = new aws.S3();
+
+// Configurar multer para usar o S3
+const upload = multer({
+    storage: multerS3({
+        s3: s3,
+        bucket: process.env.S3_BUCKET_NAME,
+        key: function (req, file, cb) {
+            cb(null, `uploads/${Date.now().toString()}-${file.originalname}`); // Definindo o nome do arquivo
+        }
+    })
+});
+
 const app = express();
 app.use(bodyParser.json());
-const upload = multer({ dest: 'uploads/' });
 
 // MongoDB setup
 const uri = process.env.MONGODB_URI; // Use a variável de ambiente
@@ -98,8 +120,9 @@ app.post('/register', async (req, res) => {
 });
 
 // Rota para inserir produto (apenas para administradores)
-app.post('/produtos', authenticateToken, authenticateAdmin, async (req, res) => {
-    const { name, description, price, image } = req.body; // Aceitar imagem como string
+app.post('/produtos', authenticateToken, authenticateAdmin, upload.single('image'), async (req, res) => {
+    const { name, description, price } = req.body; 
+    const image = req.file.location; // URL da imagem no S3
     await db.collection('produtos').insertOne({ name, description, price, image });
     res.send('Produto inserido');
 });

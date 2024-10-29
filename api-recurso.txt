@@ -1,0 +1,29 @@
+// Exemplo de requisição GET para obter produtos
+fetch('https://apimongo-rnq53oyma-alex-soares-de-oliveiras-projects.vercel.app/produtos')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro na rede');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Manipule os dados recebidos
+    })
+    .catch(error => console.error('Erro:', error));
+
+// Exemplo de requisição POST para adicionar um produto
+fetch('https://apimongo-rnq53oyma-alex-soares-de-oliveiras-projects.vercel.app/produtos', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        name: 'Produto Exemplo',
+        description: 'Descrição do Produto Exemplo',
+        price: 10.99,
+        image: 'https://via.placeholder.com/150'
+    }),
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Erro:', error));
